@@ -128,7 +128,7 @@ void simulateScheduling(const string &filename, int scheduling_type)
             currentProcess = priorityQueue.top();
             priorityQueue.pop();
         }
-        else // If no processes here to work with, simply advance current_time and restart
+        else // If no processes are here to work with, simply advance current_time and restart
         {
             current_time++;
             continue;
@@ -141,12 +141,16 @@ void simulateScheduling(const string &filename, int scheduling_type)
 
         // Perform CPU burst to complete current process
         current_time += currentProcess.burst_length;
+
         // Allocate finish_time to process that was just finished
         currentProcess.finish_time = current_time;
-        // Add burst length to cpu_utilization
+
+        // Add burst length to cpu_utilization (cpu_utilization is grand total burst length before other calculations are made)
         cpu_utilization += currentProcess.burst_length;
 
-                completedProcesses.push_back(currentProcess);
+        // Add current process to list of completed processes
+        completedProcesses.push_back(currentProcess);
+
         // Increment number of processes completed
         num_completed++;
 
@@ -175,11 +179,11 @@ void simulateScheduling(const string &filename, int scheduling_type)
     cout << "Statistics for the Run:" << endl;
     cout << "Number of processes: " << num_completed << endl;
     cout << "Total elapsed time (in CPU burst units): " << current_time << endl;
-    cout << "Throughput: " << static_cast<double>(num_completed) / current_time << " processes per CPU burst unit" << endl;
-    cout << "CPU utilization: " << static_cast<double>(cpu_utilization) / current_time * 100 << "%" << endl;
-    cout << "Average waiting time: " << total_waiting_time / num_completed << " CPU burst units" << endl;
-    cout << "Average turnaround time: " << total_turnaround_time / num_completed << " CPU burst units" << endl;
-    cout << "Average response time: " << total_response_time / num_completed << " CPU burst units" << endl;
+    cout << "Throughput (Total Burst Time / # Processes): " << cpu_utilization << "/" << num_completed << " = " << static_cast<double>(cpu_utilization) / num_completed << " processes per CPU burst unit" << endl;
+    cout << "CPU utilization (Total Burst Time / Total Elapsed Time): " << static_cast<double>(cpu_utilization) / current_time * 100 << "%" << endl;
+    cout << "Average waiting time: " << total_waiting_time << "/" << num_completed << " = " << total_waiting_time / num_completed << " CPU burst units" << endl;
+    cout << "Average turnaround time: " << total_turnaround_time << "/" << num_completed << " = " << total_turnaround_time / num_completed << " CPU burst units" << endl;
+    cout << "Average response time: " << total_response_time << "/" << num_completed << " = " << total_response_time / num_completed << " CPU burst units" << endl;
 }
 
 int main()
