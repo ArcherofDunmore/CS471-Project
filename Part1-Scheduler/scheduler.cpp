@@ -191,3 +191,6 @@ int main()
     simulateScheduling(filename, scheduling_type);
     return 0;
 }
+
+// To run this program, in the terminal run the command -> g++ -o cpu_scheduling scheduler.cpp
+// Then enter -> .\cpu_scheduling.exe
