@@ -179,7 +179,7 @@ void simulateScheduling(const string &filename, int scheduling_type)
     cout << "Statistics for the Run:" << endl;
     cout << "Number of processes: " << num_completed << endl;
     cout << "Total elapsed time (in CPU burst units): " << current_time << endl;
-    cout << "Throughput (Total Burst Time / # Processes): " << cpu_utilization << "/" << num_completed << " = " << static_cast<double>(cpu_utilization) / num_completed << " processes per CPU burst unit" << endl;
+    cout << "Throughput (# Processes / Total Burst Time): " << num_completed << "/" << cpu_utilization << " = " << num_completed / static_cast<double>(cpu_utilization) << " processes per CPU burst unit" << endl;
     cout << "CPU utilization (Total Burst Time / Total Elapsed Time): " << static_cast<double>(cpu_utilization) / current_time * 100 << "%" << endl;
     cout << "Average waiting time: " << total_waiting_time << "/" << num_completed << " = " << total_waiting_time / num_completed << " CPU burst units" << endl;
     cout << "Average turnaround time: " << total_turnaround_time << "/" << num_completed << " = " << total_turnaround_time / num_completed << " CPU burst units" << endl;
