@@ -9,7 +9,7 @@
 
 using namespace std;
 
-// Structure to hold process information
+// Struct to hold process info
 struct Process
 {
     int arrival_time;
@@ -31,7 +31,7 @@ struct FIFOComparator
     }
 };
 
-// Comparator for Priority (sort by priority, break ties with arrival time)
+// Comparator for Priority (sort by priority, breaks ties with arrival time)
 struct PriorityComparator
 {
     bool operator()(const Process &a, const Process &b)
@@ -67,6 +67,7 @@ void simulateScheduling(const string &filename, int scheduling_type)
     // Read processes from the file
     while (file >> arrival_time >> burst_length >> priority)
     {
+        // Adds new process at the end of the list, retaining the same order
         processes.emplace_back(arrival_time, burst_length, priority);
 
         // Process arrival debugging
@@ -88,6 +89,7 @@ void simulateScheduling(const string &filename, int scheduling_type)
     // Scheduling loop
     while (num_completed < 500 && !processes.empty())
     {
+        // Adds a process to the queue whenever current_time comes to equal that process's arrival_time
         while (!processes.empty() && processes.front().arrival_time <= current_time)
         {
             if (scheduling_type == 1)
@@ -108,10 +110,14 @@ void simulateScheduling(const string &filename, int scheduling_type)
                      << ", Burst=" << processes.front().burst_length
                      << ", Priority=" << processes.front().priority << endl; */
             }
+            // Erase the process that was just added to the queue
             processes.erase(processes.begin());
         }
 
+        // Create process placeholder object
         Process currentProcess(0, 0, 0);
+
+        // Copy top of stack onto placeholder, then delete that item from stack
         if (scheduling_type == 1 && !fifoQueue.empty())
         {
             currentProcess = fifoQueue.top();
@@ -122,7 +128,7 @@ void simulateScheduling(const string &filename, int scheduling_type)
             currentProcess = priorityQueue.top();
             priorityQueue.pop();
         }
-        else
+        else // If no processes here to work with, simply advance current_time and restart
         {
             current_time++;
             continue;
@@ -133,11 +139,15 @@ void simulateScheduling(const string &filename, int scheduling_type)
             currentProcess.start_time = current_time;
         }
 
+        // Perform CPU burst to complete current process
         current_time += currentProcess.burst_length;
+        // Allocate finish_time to process that was just finished
         currentProcess.finish_time = current_time;
+        // Add burst length to cpu_utilization
         cpu_utilization += currentProcess.burst_length;
 
-        completedProcesses.push_back(currentProcess);
+                completedProcesses.push_back(currentProcess);
+        // Increment number of processes completed
         num_completed++;
 
         // Process completed debugging
