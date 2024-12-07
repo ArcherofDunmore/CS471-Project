@@ -163,7 +163,7 @@ public:
         }
     }
 
-    void printStatistics(const vector<Process> &processes) const
+    void printStatistics(const vector<Process> &processes, int scheduling_type) const
     {
         int totalWaitingTime = 0, totalTurnaroundTime = 0, totalResponseTime = 0, totalBurstTime = 0;
 
@@ -177,6 +177,27 @@ public:
         }
 
         int numProcesses = processes.size();
+        string outputFilename = "";
+
+        // Set the .txt file name
+        if (scheduling_type == 1)
+        {
+            outputFilename = "Scheduler_Statistics_FIFO.txt";
+        }
+        else
+        {
+            outputFilename = "Scheduler_Statistics_Priority.txt";
+        }
+
+        // Open file
+        ofstream outputFile(outputFilename);
+        if (!outputFile.is_open())
+        {
+            cerr << "Error: Unable to open file for writing statistics." << endl;
+            return;
+        }
+
+        // Write to terminal
         cout << "Statistics for the Run:" << endl;
         cout << "Number of processes: " << numProcesses << endl;
         cout << "Total elapsed time: " << time << endl;
@@ -186,6 +207,19 @@ public:
         cout << "Average waiting time: " << (double)totalWaitingTime / numProcesses << endl;
         cout << "Average turnaround time: " << (double)totalTurnaroundTime / numProcesses << endl;
         cout << "Average response time: " << (double)totalResponseTime / numProcesses << endl;
+
+        // Write to file
+        outputFile << "Statistics for the Run:" << endl;
+        outputFile << "Number of processes: " << numProcesses << endl;
+        outputFile << "Total elapsed time: " << time << endl;
+        outputFile << "Throughput: " << (double)numProcesses / time << " processes/unit time" << endl;
+        outputFile << fixed << setprecision(2);
+        outputFile << "CPU utilization (Total Burst Time / Total Elapsed Time): " << (double)totalBurstTime / time * 100 << "%" << endl;
+        outputFile << "Average waiting time: " << (double)totalWaitingTime / numProcesses << endl;
+        outputFile << "Average turnaround time: " << (double)totalTurnaroundTime / numProcesses << endl;
+        outputFile << "Average response time: " << (double)totalResponseTime / numProcesses << endl;
+
+        outputFile.close();
     }
 };
 
@@ -251,7 +285,7 @@ int main()
     }
 
     // Print completed output
-    scheduler.printStatistics(processes);
+    scheduler.printStatistics(processes, scheduling_type);
 
     return 0;
 }
