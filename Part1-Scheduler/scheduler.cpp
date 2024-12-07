@@ -53,13 +53,14 @@ public:
         // While the fifoQueue still has processes in it...
         while (!fifoQueue.empty())
         {
+            // Copy the top of the stack into the placeholder object, and delete that item from the stack
             Process current = fifoQueue.front();
             fifoQueue.pop();
 
-            // Advance time to the process's arrival time if necessary
+            // Advance time to the process's arrival time (if necessary)
             time = max(time, current.arrivalTime);
 
-            // Set start time if current start time is still default
+            // Set start time if current start time is still the default value
             if (current.startTime == -1)
             {
                 current.startTime = time;
@@ -76,6 +77,7 @@ public:
             current.turnaroundTime = time - current.arrivalTime;
 
             // Update the process in the vector
+            // Create pointer to processes, then update the item in 'processes' by applying the new updated 'current' values
             auto &processRef = processes[current.pid];
             processRef = current;
         }
@@ -83,7 +85,7 @@ public:
 
     void runPriority(vector<Process> &processes)
     {
-        // Create boolean comparator so it can know what processes are higher priority
+        // Boolean comparator so it can know what processes are higher priority
         priority_queue<Process, vector<Process>, function<bool(Process, Process)>> priorityQueue(
             [](const Process &a, const Process &b)
             {
@@ -109,7 +111,7 @@ public:
                 continue;
             }
 
-            // Fetch the process with the highest priority
+            // Otherwise, fetch the process from the queue into a placeholder object 'current'
             Process current = priorityQueue.top();
             priorityQueue.pop();
 
@@ -134,10 +136,10 @@ public:
                     currentIndex++;
                 }
 
-                // Check if a higher-priority process has arrived
+                // Check if the newly arrived process is higher priority
                 if (!priorityQueue.empty() && priorityQueue.top().priority < current.priority)
                 {
-                    // Preempt the current process and add it back to the priority queue
+                    // If it is, preempt the current process and add it back to the priority queue
                     priorityQueue.push(current);
                     break; // Stop executing the current process
                 }
@@ -152,7 +154,7 @@ public:
                 // Update the original process in the `processes` vector
                 processes[current.pid] = current;
 
-                // Debug: Log completed process
+                // Debug: Log completed processes
                 // cout << "Completed PID: " << current.pid
                 //     << " at time: " << time
                 //     << " turnaround: " << current.turnaroundTime
@@ -165,6 +167,7 @@ public:
     {
         int totalWaitingTime = 0, totalTurnaroundTime = 0, totalResponseTime = 0, totalBurstTime = 0;
 
+        // Calculate the total of the following variables from the 'processes' object, which contains a copy of all processes from the input file
         for (const auto &p : processes)
         {
             totalWaitingTime += p.waitingTime;
@@ -188,8 +191,10 @@ public:
 
 int main()
 {
+    // Create the object 'processes'
     vector<Process> processes;
 
+    // Open file
     ifstream file("Datafile1-txt.txt");
     if (!file.is_open())
     {
@@ -201,7 +206,7 @@ int main()
     // Skip the first line (header)
     getline(file, line);
 
-    // Read the first 500 processes
+    // Read the first 500 processes into the object 'processes'
     int pid = 0; // Assign process IDs incrementally
     int arrivalTime, cpuBurst, priority;
     while (pid < 500 && file >> arrivalTime >> cpuBurst >> priority)
@@ -209,14 +214,17 @@ int main()
         processes.emplace_back(pid++, arrivalTime, priority, cpuBurst);
     }
 
+    // Clode file
     file.close();
 
-    if (processes.size() < 500)
+    // Old debugging
+    /* if (processes.size() < 500)
     {
         cerr << "Error: Less than 500 processes available in the file." << endl;
         return 1;
-    }
+    } */
 
+    // Create scheduler object
     Scheduler scheduler;
 
     int scheduling_type;
@@ -232,6 +240,7 @@ int main()
         }
     }
 
+    // Run specified type of scheduling based on user input
     if (scheduling_type == 1)
     {
         scheduler.runFIFO(processes);
@@ -241,6 +250,7 @@ int main()
         scheduler.runPriority(processes);
     }
 
+    // Print completed output
     scheduler.printStatistics(processes);
 
     return 0;
