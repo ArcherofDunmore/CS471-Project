@@ -1,194 +1,224 @@
 #include <iostream>
 #include <fstream>
-#include <sstream>
-#include <queue>
 #include <vector>
+#include <queue>
 #include <algorithm>
 #include <iomanip>
-#include <string>
+#include <cstdlib>
+#include <ctime>
+#include <functional>
 
 using namespace std;
 
-// Struct to hold process info
 struct Process
 {
-    int arrival_time;
-    int burst_length;
-    int priority;
-    int start_time = -1;
-    int finish_time = 0;
-    int remaining_time;
-    Process(int at, int bl, int p)
-        : arrival_time(at), burst_length(bl), priority(p), remaining_time(bl) {}
+    int pid;            // Process ID
+    int arrivalTime;    // Arrival time
+    int priority;       // Priority
+    int cpuBurst;       // CPU burst units
+    int remainingBurst; // Remaining burst time for preemption
+    int waitingTime;    // Waiting time
+    int turnaroundTime; // Turnaround time
+    int responseTime;   // Response time
+    int startTime;      // Start time
+
+    Process(int id, int arrival, int pri, int burst)
+        : pid(id), arrivalTime(arrival), priority(pri), cpuBurst(burst),
+          remainingBurst(burst), waitingTime(0), turnaroundTime(0),
+          responseTime(-1), startTime(-1) {}
 };
 
-// Comparator for FIFO (sort by arrival time)
-struct FIFOComparator
+class Scheduler
 {
-    bool operator()(const Process &a, const Process &b)
-    {
-        return a.arrival_time > b.arrival_time;
-    }
-};
+private:
+    int time;
 
-// Comparator for Priority (sort by priority, breaks ties with arrival time)
-struct PriorityComparator
-{
-    bool operator()(const Process &a, const Process &b)
+    queue<Process> fifoQueue;                                                                 // FIFO queue
+    priority_queue<Process, vector<Process>, function<bool(Process, Process)>> priorityQueue; // Priority queue needs the comparator for priority
+
+public:
+    Scheduler()
+        : time(0),
+          priorityQueue([](const Process &a, const Process &b)
+                        { return a.priority > b.priority; }) {}
+
+    void runFIFO(vector<Process> &processes)
     {
-        if (a.priority == b.priority)
+        // Push all processes into the fifoQueue
+        for (auto &p : processes)
         {
-            return a.arrival_time > b.arrival_time;
-        }
-        return a.priority > b.priority;
-    }
-};
-
-// Function to simulate CPU scheduling
-void simulateScheduling(const string &filename, int scheduling_type)
-{
-    ifstream file(filename);
-    if (!file.is_open())
-    {
-        cerr << "Error: Unable to open file: " << filename << endl;
-        return;
-    }
-    else
-    {
-        cout << "File opened successfully: " << filename << endl;
-    }
-
-    vector<Process> processes;
-    int arrival_time, burst_length, priority;
-
-    string line;
-    getline(file, line); // Skip the first line (header)
-
-    // Read processes from the file
-    while (file >> arrival_time >> burst_length >> priority)
-    {
-        // Adds new process at the end of the list, retaining the same order
-        processes.emplace_back(arrival_time, burst_length, priority);
-
-        // Process arrival debugging
-        /* cout << "Read process: Arrival=" << arrival_time
-             << ", Burst=" << burst_length
-             << ", Priority=" << priority << endl; */
-    }
-    file.close();
-
-    // Ready queue and finished processes
-    priority_queue<Process, vector<Process>, FIFOComparator> fifoQueue;
-    priority_queue<Process, vector<Process>, PriorityComparator> priorityQueue;
-    vector<Process> completedProcesses;
-
-    int current_time = 0;
-    int num_completed = 0;
-    int cpu_utilization = 0;
-
-    // Scheduling loop
-    while (num_completed < 500 && !processes.empty())
-    {
-        // Adds a process to the queue whenever current_time comes to equal that process's arrival_time
-        while (!processes.empty() && processes.front().arrival_time <= current_time)
-        {
-            if (scheduling_type == 1)
-            { // FIFO
-                fifoQueue.push(processes.front());
-
-                // Add to queue debugging
-                /* cout << "Added to FIFO Queue: Arrival=" << processes.front().arrival_time
-                     << ", Burst=" << processes.front().burst_length
-                     << ", Priority=" << processes.front().priority << endl; */
-            }
-            else if (scheduling_type == 2)
-            { // Priority
-                priorityQueue.push(processes.front());
-
-                // Add to queue debugging
-                /* cout << "Added to Priority Queue: Arrival=" << processes.front().arrival_time
-                     << ", Burst=" << processes.front().burst_length
-                     << ", Priority=" << processes.front().priority << endl; */
-            }
-            // Erase the process that was just added to the queue
-            processes.erase(processes.begin());
+            fifoQueue.push(p);
         }
 
-        // Create process placeholder object
-        Process currentProcess(0, 0, 0);
-
-        // Copy top of stack onto placeholder, then delete that item from stack
-        if (scheduling_type == 1 && !fifoQueue.empty())
+        // While the fifoQueue still has processes in it...
+        while (!fifoQueue.empty())
         {
-            currentProcess = fifoQueue.top();
+            Process current = fifoQueue.front();
             fifoQueue.pop();
+
+            // Advance time to the process's arrival time if necessary
+            time = max(time, current.arrivalTime);
+
+            // Set start time if current start time is still default
+            if (current.startTime == -1)
+            {
+                current.startTime = time;
+                current.responseTime = current.startTime - current.arrivalTime; // Set response time
+            }
+
+            // Calculate waiting time
+            current.waitingTime = time - current.arrivalTime;
+
+            // Execute the process
+            time += current.cpuBurst;
+
+            // Calculate turnaround time
+            current.turnaroundTime = time - current.arrivalTime;
+
+            // Update the process in the vector
+            auto &processRef = processes[current.pid];
+            processRef = current;
         }
-        else if (scheduling_type == 2 && !priorityQueue.empty())
-        {
-            currentProcess = priorityQueue.top();
-            priorityQueue.pop();
-        }
-        else // If no processes are here to work with, simply advance current_time and restart
-        {
-            current_time++;
-            continue;
-        }
-
-        if (currentProcess.start_time == -1)
-        {
-            currentProcess.start_time = current_time;
-        }
-
-        // Perform CPU burst to complete current process
-        current_time += currentProcess.burst_length;
-
-        // Allocate finish_time to process that was just finished
-        currentProcess.finish_time = current_time;
-
-        // Add burst length to cpu_utilization (cpu_utilization is grand total burst length before other calculations are made)
-        cpu_utilization += currentProcess.burst_length;
-
-        // Add current process to list of completed processes
-        completedProcesses.push_back(currentProcess);
-
-        // Increment number of processes completed
-        num_completed++;
-
-        // Process completed debugging
-        /* cout << "Process completed: Arrival=" << currentProcess.arrival_time
-             << ", Start=" << currentProcess.start_time
-             << ", Finish=" << currentProcess.finish_time
-             << ", Turnaround=" << currentProcess.finish_time - currentProcess.arrival_time
-             << ", Waiting=" << (currentProcess.finish_time - currentProcess.arrival_time) - currentProcess.burst_length
-             << endl; */
     }
 
-    double total_turnaround_time = 0, total_waiting_time = 0, total_response_time = 0;
-
-    for (const auto &process : completedProcesses)
+    void runPriority(vector<Process> &processes)
     {
-        int turnaround_time = process.finish_time - process.arrival_time;
-        int waiting_time = turnaround_time - process.burst_length;
-        int response_time = process.start_time - process.arrival_time;
+        // Create boolean comparator so it can know what processes are higher priority
+        priority_queue<Process, vector<Process>, function<bool(Process, Process)>> priorityQueue(
+            [](const Process &a, const Process &b)
+            {
+                if (a.priority == b.priority)
+                    return a.arrivalTime > b.arrivalTime; // Break ties by arrival time
+                return a.priority > b.priority;
+            });
 
-        total_turnaround_time += turnaround_time;
-        total_waiting_time += waiting_time;
-        total_response_time += response_time;
+        size_t currentIndex = 0; // To track processes in the `processes` vector
+        while (!priorityQueue.empty() || currentIndex < processes.size())
+        {
+            // Add newly arriving processes to the priority queue
+            while (currentIndex < processes.size() && processes[currentIndex].arrivalTime <= time)
+            {
+                priorityQueue.push(processes[currentIndex]);
+                currentIndex++;
+            }
+
+            // If no process is ready to run, increment time and continue
+            if (priorityQueue.empty())
+            {
+                time++;
+                continue;
+            }
+
+            // Fetch the process with the highest priority
+            Process current = priorityQueue.top();
+            priorityQueue.pop();
+
+            // Set the start time if this is the first time the process is being executed
+            if (current.startTime == -1)
+            {
+                current.startTime = time;
+                current.responseTime = time - current.arrivalTime; // Calculate response time
+            }
+
+            // Execute the process one tick at a time
+            while (current.remainingBurst > 0)
+            {
+                // Simulate one unit of execution
+                current.remainingBurst--;
+                time++;
+
+                // Add newly arriving processes to the priority queue
+                while (currentIndex < processes.size() && processes[currentIndex].arrivalTime <= time)
+                {
+                    priorityQueue.push(processes[currentIndex]);
+                    currentIndex++;
+                }
+
+                // Check if a higher-priority process has arrived
+                if (!priorityQueue.empty() && priorityQueue.top().priority < current.priority)
+                {
+                    // Preempt the current process and add it back to the priority queue
+                    priorityQueue.push(current);
+                    break; // Stop executing the current process
+                }
+            }
+
+            // If the process finishes, calculate its turnaround and waiting times
+            if (current.remainingBurst == 0)
+            {
+                current.turnaroundTime = time - current.arrivalTime;             // Calculate turnaround time
+                current.waitingTime = current.turnaroundTime - current.cpuBurst; // Calculate waiting time
+
+                // Update the original process in the `processes` vector
+                processes[current.pid] = current;
+
+                // Debug: Log completed process
+                // cout << "Completed PID: " << current.pid
+                //     << " at time: " << time
+                //     << " turnaround: " << current.turnaroundTime
+                //     << " waiting: " << current.waitingTime << endl;
+            }
+        }
     }
 
-    cout << "Statistics for the Run:" << endl;
-    cout << "Number of processes: " << num_completed << endl;
-    cout << "Total elapsed time (in CPU burst units): " << current_time << endl;
-    cout << "Throughput (# Processes / Total Burst Time): " << num_completed << "/" << cpu_utilization << " = " << num_completed / static_cast<double>(cpu_utilization) << " processes per CPU burst unit" << endl;
-    cout << "CPU utilization (Total Burst Time / Total Elapsed Time): " << static_cast<double>(cpu_utilization) / current_time * 100 << "%" << endl;
-    cout << "Average waiting time: " << total_waiting_time << "/" << num_completed << " = " << total_waiting_time / num_completed << " CPU burst units" << endl;
-    cout << "Average turnaround time: " << total_turnaround_time << "/" << num_completed << " = " << total_turnaround_time / num_completed << " CPU burst units" << endl;
-    cout << "Average response time: " << total_response_time << "/" << num_completed << " = " << total_response_time / num_completed << " CPU burst units" << endl;
-}
+    void printStatistics(const vector<Process> &processes) const
+    {
+        int totalWaitingTime = 0, totalTurnaroundTime = 0, totalResponseTime = 0, totalBurstTime = 0;
+
+        for (const auto &p : processes)
+        {
+            totalWaitingTime += p.waitingTime;
+            totalTurnaroundTime += p.turnaroundTime;
+            totalResponseTime += p.responseTime;
+            totalBurstTime += p.cpuBurst;
+        }
+
+        int numProcesses = processes.size();
+        cout << "Statistics for the Run:" << endl;
+        cout << "Number of processes: " << numProcesses << endl;
+        cout << "Total elapsed time: " << time << endl;
+        cout << "Throughput: " << (double)numProcesses / time << " processes/unit time" << endl;
+        cout << fixed << setprecision(2);
+        cout << "CPU utilization (Total Burst Time / Total Elapsed Time): " << (double)totalBurstTime / time * 100 << "%" << endl;
+        cout << "Average waiting time: " << (double)totalWaitingTime / numProcesses << endl;
+        cout << "Average turnaround time: " << (double)totalTurnaroundTime / numProcesses << endl;
+        cout << "Average response time: " << (double)totalResponseTime / numProcesses << endl;
+    }
+};
 
 int main()
 {
-    string filename = "Datafile1-txt.txt";
+    vector<Process> processes;
+
+    ifstream file("Datafile1-txt.txt");
+    if (!file.is_open())
+    {
+        cerr << "Error: Unable to open file Datafile1-txt.txt" << endl;
+        return 1;
+    }
+
+    string line;
+    // Skip the first line (header)
+    getline(file, line);
+
+    // Read the first 500 processes
+    int pid = 0; // Assign process IDs incrementally
+    int arrivalTime, cpuBurst, priority;
+    while (pid < 500 && file >> arrivalTime >> cpuBurst >> priority)
+    {
+        processes.emplace_back(pid++, arrivalTime, priority, cpuBurst);
+    }
+
+    file.close();
+
+    if (processes.size() < 500)
+    {
+        cerr << "Error: Less than 500 processes available in the file." << endl;
+        return 1;
+    }
+
+    Scheduler scheduler;
+
     int scheduling_type;
 
     while (!(scheduling_type == 1 || scheduling_type == 2))
@@ -202,9 +232,16 @@ int main()
         }
     }
 
-    simulateScheduling(filename, scheduling_type);
+    if (scheduling_type == 1)
+    {
+        scheduler.runFIFO(processes);
+    }
+    else
+    {
+        scheduler.runPriority(processes);
+    }
+
+    scheduler.printStatistics(processes);
+
     return 0;
 }
-
-// To run this program, in the terminal run the command -> g++ -o cpu_scheduling scheduler.cpp
-// Then enter -> .\cpu_scheduling.exe
