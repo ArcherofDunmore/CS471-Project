@@ -1,10 +1,6 @@
 CS471 Project
 # CS471 Operating Systems Project Fall 2024
 
-Execution of this program is simple. 
- - Open a terminal, navigate to the folder containing the program cpu_scheduling.exe
- - Run the program by entering .\cpu_scheduling.exe
- - Enter either 1 or 2 for FIFO or Preemptive Priority scheduling, respectively
-
-The program will process information from the input data file and output the statistics
-These statistics will be output to the terminal, and also to a .txt file in the same directory
+Instructions and brief descriptions of each Part of the project are located within the respective folders for each Part.
+The file name will be 'PART1README.MD' OR 'PART2README.MD'
+Detailed descriptions of exactly what tasks the program is doing are found in the comments within the code itself.
