@@ -27,8 +27,8 @@ DWORD WINAPI producer(LPVOID b) {
         chrono::system_clock::time_point start_time = chrono::system_clock::now();
         
         /* wait */
-        WaitForSingleObject(buffer->empty, 15000);
-        WaitForSingleObject(buffer->mutex, 15000);
+        WaitForSingleObject(buffer->empty, 16000);
+        WaitForSingleObject(buffer->mutex, 16000);
 
         if (threads_running) {
             /*** critical section ***/
@@ -63,8 +63,8 @@ DWORD WINAPI consumer(LPVOID b) {
         chrono::system_clock::time_point start_time = chrono::system_clock::now();
 
         /* wait */
-        WaitForSingleObject(buffer->full, 15000);
-        WaitForSingleObject(buffer->mutex, 15000);
+        WaitForSingleObject(buffer->full, 16000);
+        WaitForSingleObject(buffer->mutex, 16000);
 
         if (threads_running) {          
             /*** critical section ***/
