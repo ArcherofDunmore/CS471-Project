@@ -1,0 +1,49 @@
+test 1: num_producers = 1, num_consumers = 1, sleep_time = 10
+	all turnaround times: [ 0.0015743 0.0011949 ]
+	average turaround time: 0.0013846
+
+test 2: num_producers = 4, num_consumers = 1, sleep_time = 10
+	all turnaround times: [ 0.0055298 0.0024738 ]
+	average turaround time: 0.0040018
+
+test 3: num_producers = 16, num_consumers = 1, sleep_time = 10
+	all turnaround times: [ 0.0065297 0.0019467 ]
+	average turaround time: 0.0042382
+
+test 4: num_producers = 1, num_consumers = 2, sleep_time = 10
+	all turnaround times: [ 0.0025313 4.01772 ]
+	average turaround time: 2.01012
+
+test 5: num_producers = 4, num_consumers = 2, sleep_time = 10
+	all turnaround times: [ 0.005384 0.0060168 0.0024016 0.003338 ]
+	average turaround time: 0.0042851
+
+test 6: num_producers = 16, num_consumers = 2, sleep_time = 10
+	all turnaround times: [ 0.0075995 0.0082379 0.0017824 0.002663 ]
+	average turaround time: 0.0050707
+
+test 7: num_producers = 1, num_consumers = 4, sleep_time = 10
+	all turnaround times: [ 0.0036206 4.01928 ]
+	average turaround time: 2.01145
+
+test 8: num_producers = 4, num_consumers = 4, sleep_time = 10
+	all turnaround times: [ 0.0073678 0.0081194 0.0089226 0.0095217 0.0019223 0.0030706 0.0039666 0.0046922 ]
+	average turaround time: 0.0059479
+
+test 9: num_producers = 16, num_consumers = 4, sleep_time = 10
+	all turnaround times: [ 0.0073114 0.0078124 0.0083607 0.0089069 0.0023337 0.0034394 0.0045899 0.0057745 ]
+	average turaround time: 0.00606611
+
+test 10: num_producers = 1, num_consumers = 16, sleep_time = 10
+	all turnaround times: [ 0.0024486 4.01749 ]
+	average turaround time: 2.00997
+
+test 11: num_producers = 4, num_consumers = 16, sleep_time = 10
+	all turnaround times: [ 0.0069991 0.0076813 0.0081293 0.0085424 4.01933 4.02052 4.02118 4.02155 ]
+	average turaround time: 2.01424
+
+test 12: num_producers = 16, num_consumers = 16, sleep_time = 10
+	all turnaround times: [ 0.0067626 0.0077167 0.0082632 0.0087702 0.0091902 0.0126454 0.0134269 0.0138883 0.0143145 0.014653 0.0181603 0.0187537 0.0191707 0.0195783 0.0200192 0.0210846 0.0018691 0.0029986 0.0040238 0.0046014 0.0049905 0.0097052 0.0102832 0.010757 0.0111127 0.0114113 0.0080255 0.0085053 0.0091318 0.0096402 0.0099312 0.0106818 ]
+	average turaround time: 0.0110646
+
+overall average turnaround time: 0.377419
