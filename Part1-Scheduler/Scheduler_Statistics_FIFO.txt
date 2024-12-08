@@ -1,0 +1,8 @@
+Statistics for the Run:
+Number of processes: 500
+Total elapsed time: 14744
+Throughput: 0.0339121 processes/unit time
+CPU utilization (Total Burst Time / Total Elapsed Time): 71.61%
+Average waiting time: 17.88
+Average turnaround time: 39.00
+Average response time: 17.88
