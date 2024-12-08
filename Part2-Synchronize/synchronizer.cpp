@@ -6,25 +6,25 @@
 
 using namespace std;
 
+bool threads_running = false;
+
 DWORD WINAPI producer(LPVOID b) {
     /* initialize buffer and item */
     Buffer *buffer = (Buffer*)b;
     buffer_item item;
 
-    while (true) {
+    while (threads_running) {
         /* sleep for a random period of time */
         sleep(rand() % 20);
-
-        /* generate random number */
-        item = rand();
 
         /* wait */
         WaitForSingleObject(buffer->empty, INFINITE);
         WaitForSingleObject(buffer->mutex, INFINITE);
 
         /*** critical section ***/
+        item = rand();
         buffer->insert_item(item);
-        cout << "item inserted: " << item << endl;
+        cout << "\titem inserted: " << item << endl << "\t";
         buffer->display();
         cout << endl;
 
@@ -41,7 +41,7 @@ DWORD WINAPI consumer(LPVOID b) {
     Buffer *buffer = (Buffer*)b;
     buffer_item item;
 
-    while (true) {
+    while (threads_running) {
         /* sleep for a random period of time */
         sleep(rand() % 20);
 
@@ -51,7 +51,7 @@ DWORD WINAPI consumer(LPVOID b) {
         
         /*** critical section ***/
         buffer->remove_item(item);
-        cout << "item removed: " << item << endl;
+        cout << "\titem removed: " << item << endl << "\t";
         buffer->display();
         cout << endl;
 
@@ -63,30 +63,51 @@ DWORD WINAPI consumer(LPVOID b) {
     return 0;
 }
 
-int main() {
-    /* get params */
-    int sleep_time = 120;
-    int num_producers = 1;
-    int num_consumers = 1;
+int synchronizer(int num_producers, int num_consumers, int sleep_time) {
+    cout << "> begin test: num_producers = " << num_producers << ", num_consumers = " << num_consumers << ", sleep_time = " << sleep_time << endl << endl;
     
     /* initialize buffer */
     Buffer buffer;
+    HANDLE p_threads[num_producers];
+    HANDLE c_threads[num_consumers];
+    threads_running = true;
 
     /* create producer threads */
     for (int i = 0; i < num_producers; i++) {
         DWORD thread_id;
         HANDLE thread_handle = CreateThread(NULL, 0, producer, &buffer, 0, &thread_id);
+        p_threads[i] = thread_handle;
     }
 
     /* create consumer threads */
     for (int i = 0; i < num_consumers; i++) {
         DWORD thread_id;
         HANDLE thread_handle = CreateThread(NULL, 0, consumer, &buffer, 0, &thread_id);
+        c_threads[i] = thread_handle;
     }
 
     /* sleep */
     sleep(sleep_time);
 
+    /* close threads */  
+    cout << "> begin shutdown" << endl << endl;
+    threads_running = false;
+
+    WaitForMultipleObjects(num_producers, p_threads, TRUE, INFINITE);
+    WaitForMultipleObjects(num_consumers, c_threads, TRUE, INFINITE);
+    
+    cout << "> threads closed: end test" << endl << endl;
+
     /* exit*/
     return 0;
+}
+
+int main() {
+    int list_producers[12] = {1, 4, 16, 1, 4, 16, 1, 4, 16, 1, 4, 16};
+    int list_consumers[12] = {1, 1, 1, 2, 2, 2, 4, 4, 4, 16, 16, 16};
+    int list_sleep_times[12] = {10, 20, 30, 40, 50, 60, 10, 20, 30, 40, 50, 60};
+
+    for (int i = 0; i < sizeof(list_producers); i++) {
+        synchronizer(list_producers[i], list_consumers[i], list_sleep_times[i]);
+    }
 }
